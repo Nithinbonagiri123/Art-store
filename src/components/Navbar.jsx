@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function Navbar({ currentView, setView, user, onLogout, onDeleteAccount }) {
+export function Navbar({ currentView, setView, user, onLogout, onDeleteAccount, cartCount, onCartClick }) {
     return (
         <div style={{ position: 'sticky', top: 0, zIndex: 1000, background: 'rgba(10,10,10,0.8)', backdropFilter: 'blur(10px)', borderBottom: '1px solid var(--border-color)' }}>
             <nav className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '70px' }}>
@@ -12,18 +12,26 @@ export function Navbar({ currentView, setView, user, onLogout, onDeleteAccount }
                 <div className="nav-links" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <button
                         onClick={() => setView('gallery')}
-                        style={{ background: currentView === 'gallery' ? 'var(--accent-color)' : 'transparent', color: currentView === 'gallery' ? '#000' : 'var(--text-primary)' }}
+                        style={{ background: currentView === 'gallery' ? 'var(--accent-color)' : 'transparent', color: currentView === 'gallery' ? 'black' : 'white' }}
                     >
                         Gallery
                     </button>
 
                     {user && user.role === 'user' && (
-                        <button
-                            onClick={() => setView('sell')}
-                            style={{ background: currentView === 'sell' ? 'var(--accent-color)' : 'transparent', color: currentView === 'sell' ? '#000' : 'var(--text-primary)' }}
-                        >
-                            Sell Art
-                        </button>
+                        <>
+                            <button
+                                onClick={() => setView('sell')}
+                                style={{ background: currentView === 'sell' ? 'var(--accent-color)' : 'transparent', color: currentView === 'sell' ? 'black' : 'white' }}
+                            >
+                                Sell Art
+                            </button>
+                            <button
+                                onClick={() => setView('orders')}
+                                style={{ background: currentView === 'orders' ? 'var(--accent-color)' : 'transparent', color: currentView === 'orders' ? 'black' : 'white' }}
+                            >
+                                My Orders
+                            </button>
+                        </>
                     )}
 
                     {user && user.role === 'admin' && (
@@ -36,23 +44,50 @@ export function Navbar({ currentView, setView, user, onLogout, onDeleteAccount }
                     )}
 
                     {user && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: '1rem', borderLeft: '1px solid var(--border-color)', paddingLeft: '1rem' }}>
-                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{user.username}</span>
+                        <>
                             <button
-                                onClick={onLogout}
-                                style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.1)' }}
+                                onClick={onCartClick}
+                                style={{ position: 'relative', fontSize: '1.2rem', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)' }}
                             >
-                                Logout
+                                🛒
+                                {cartCount > 0 && (
+                                    <span style={{
+                                        position: 'absolute',
+                                        top: '-5px',
+                                        right: '-5px',
+                                        background: 'var(--accent-color)',
+                                        color: 'black',
+                                        borderRadius: '50%',
+                                        width: '20px',
+                                        height: '20px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '0.7rem',
+                                        fontWeight: 'bold'
+                                    }}>
+                                        {cartCount}
+                                    </span>
+                                )}
                             </button>
-                            {user.role !== 'admin' && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: '1rem', borderLeft: '1px solid var(--border-color)', paddingLeft: '1rem' }}>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{user.username}</span>
                                 <button
-                                    onClick={onDeleteAccount}
-                                    style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem', background: '#ff4444', color: 'white' }}
+                                    onClick={onLogout}
+                                    style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.1)' }}
                                 >
-                                    Delete Account
+                                    Logout
                                 </button>
-                            )}
-                        </div>
+                                {user.role !== 'admin' && (
+                                    <button
+                                        onClick={onDeleteAccount}
+                                        style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem', background: '#ff4444', color: 'white' }}
+                                    >
+                                        Delete Account
+                                    </button>
+                                )}
+                            </div>
+                        </>
                     )}
                 </div>
             </nav>

@@ -3,6 +3,7 @@ import { Navbar } from './components/Navbar';
 import { ProductCard } from './components/ProductCard';
 import { Login } from './components/Login';
 import { Checkout } from './components/Checkout';
+import { Cart } from './components/Cart';
 import { initialProducts } from './data';
 
 import { Footer } from './components/Footer';
@@ -13,6 +14,9 @@ function App() {
     const [products, setProducts] = useState(initialProducts);
     const [user, setUser] = useState(null); // Auth state
     const [checkoutProduct, setCheckoutProduct] = useState(null); // Checkout state
+    const [cart, setCart] = useState([]); // Shopping cart
+    const [showCart, setShowCart] = useState(false); // Cart visibility
+    const [orders, setOrders] = useState([]); // Order history
 
     // Admin State
     const [formData, setFormData] = useState({
@@ -157,8 +161,44 @@ function App() {
 
     const handleConfirmPurchase = (details) => {
         console.log('Purchase Details:', details);
+        const order = {
+            id: Date.now(),
+            product: details.product,
+            address: details.address,
+            paymentMode: details.paymentMode,
+            date: new Date().toLocaleDateString()
+        };
+        setOrders([...orders, order]);
         alert(`Thank you for your purchase!\n\nItem: ${details.product.title}\nShipped to: ${details.address}\nPayment: ${details.paymentMode}`);
         setCheckoutProduct(null);
+    };
+
+    const handleAddToCart = (product) => {
+        if (cart.find(item => item.id === product.id)) {
+            alert('This item is already in your cart!');
+            return;
+        }
+        setCart([...cart, product]);
+        alert(`${product.title} added to cart!`);
+    };
+
+    const handleRemoveFromCart = (productId) => {
+        setCart(cart.filter(item => item.id !== productId));
+    };
+
+    const handleCartCheckout = () => {
+        if (cart.length === 0) return;
+
+        const order = {
+            id: Date.now(),
+            items: [...cart],
+            total: cart.reduce((sum, item) => sum + item.price, 0),
+            date: new Date().toLocaleDateString()
+        };
+        setOrders([...orders, order]);
+        alert(`Order placed successfully!\n\nTotal: $${order.total}\nItems: ${cart.length}`);
+        setCart([]);
+        setShowCart(false);
     };
 
     // Haversine formula to calculate distance
@@ -219,6 +259,20 @@ function App() {
         }
     };
 
+    // Search & Filter State (must be declared before any early returns)
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('All');
+
+    // Derived state for categories
+    const categories = ['All', ...new Set(products.map(p => p.category))];
+
+    // Filtered products
+    const filteredProducts = products.filter(product => {
+        const matchesSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
+
     if (!user) {
         return <Login onLogin={handleLogin} onRegister={handleRegister} />;
     }
@@ -231,6 +285,8 @@ function App() {
                 user={user}
                 onLogout={() => { setUser(null); setView('gallery'); }}
                 onDeleteAccount={handleSelfDelete}
+                cartCount={cart.length}
+                onCartClick={() => setShowCart(true)}
             />
             <main className="container" style={{ flex: 1 }}>
                 {view === 'gallery' ? (
@@ -238,14 +294,32 @@ function App() {
                         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
                             <h1 style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>Curated Art Collection</h1>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem' }}>Discover unique pieces for your space.</p>
-                            <button onClick={handleNearMe} style={{ marginTop: '1rem', background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)' }}>
-                                📍 Find Art Near Me
-                            </button>
+
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem', flexWrap: 'wrap' }}>
+                                <input
+                                    type="text"
+                                    placeholder="Search art..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    style={{ padding: '0.8rem', borderRadius: '20px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white', width: '300px' }}
+                                />
+                                <select
+                                    value={selectedCategory}
+                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                    style={{ padding: '0.8rem', borderRadius: '20px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white' }}
+                                >
+                                    {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                </select>
+                                <button onClick={handleNearMe} style={{ padding: '0.8rem 1.5rem', borderRadius: '20px', background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)' }}>
+                                    📍 Find Near Me
+                                </button>
+                            </div>
                         </div>
+
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '2rem' }}>
-                            {products.map(product => (
+                            {filteredProducts.map(product => (
                                 <div key={product.id} style={{ position: 'relative' }}>
-                                    <ProductCard product={product} onBuy={handleBuy} />
+                                    <ProductCard product={product} onBuy={handleBuy} onAddToCart={handleAddToCart} />
                                     {product.distance !== undefined && product.distance !== Infinity && (
                                         <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.7)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', zIndex: 10 }}>
                                             {product.distance.toFixed(0)} km away ({product.city})
@@ -253,6 +327,11 @@ function App() {
                                     )}
                                 </div>
                             ))}
+                            {filteredProducts.length === 0 && (
+                                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+                                    No art pieces found matching your criteria.
+                                </div>
+                            )}
                         </div>
                     </div>
                 ) : view === 'sell' || view === 'admin' ? (
@@ -451,6 +530,54 @@ function App() {
                             </>
                         )}
                     </div>
+                ) : view === 'orders' ? (
+                    <div className="glass-panel" style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem' }}>
+                        <h1 style={{ marginBottom: '2rem' }}>My Orders</h1>
+                        {orders.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+                                You haven't placed any orders yet.
+                            </div>
+                        ) : (
+                            <div style={{ display: 'grid', gap: '2rem' }}>
+                                {orders.map(order => (
+                                    <div key={order.id} className="glass-panel" style={{ padding: '1.5rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
+                                            <div>
+                                                <h3 style={{ margin: '0 0 0.5rem 0' }}>Order #{order.id}</h3>
+                                                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{order.date}</p>
+                                            </div>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <p style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent-color)' }}>
+                                                    ${order.total || order.product.price}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        {order.items ? (
+                                            <div style={{ display: 'grid', gap: '1rem' }}>
+                                                {order.items.map(item => (
+                                                    <div key={item.id} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                                        <img src={item.image} alt={item.title} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} />
+                                                        <div>
+                                                            <h4 style={{ margin: '0 0 0.25rem 0' }}>{item.title}</h4>
+                                                            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>${item.price}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                                <img src={order.product.image} alt={order.product.title} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} />
+                                                <div>
+                                                    <h4 style={{ margin: '0 0 0.25rem 0' }}>{order.product.title}</h4>
+                                                    <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>${order.product.price}</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 ) : null}
 
             </main>
@@ -460,6 +587,14 @@ function App() {
                     product={checkoutProduct}
                     onCancel={() => setCheckoutProduct(null)}
                     onConfirm={handleConfirmPurchase}
+                />
+            )}
+            {showCart && (
+                <Cart
+                    cart={cart}
+                    onRemove={handleRemoveFromCart}
+                    onCheckout={handleCartCheckout}
+                    onClose={() => setShowCart(false)}
                 />
             )}
         </div>
