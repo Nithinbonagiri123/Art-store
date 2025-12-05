@@ -328,75 +328,119 @@ function App() {
             />
             <main className="container" style={{ flex: 1 }}>
                 {view === 'gallery' ? (
-                    <div>
-                        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                            <h1 style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>Curated Art Collection</h1>
-                            <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem' }}>Discover unique pieces for your space.</p>
+                    <div style={{ display: 'flex', gap: '2rem' }}>
+                        {/* Filters Sidebar */}
+                        <div className="glass-panel" style={{ width: '280px', padding: '1.5rem', height: 'fit-content', position: 'sticky', top: '90px' }}>
+                            <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.3rem' }}>🔍 Filters</h3>
 
-                            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                            {/* Search */}
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Search</label>
                                 <input
                                     type="text"
                                     placeholder="Search art..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    style={{ padding: '0.8rem', borderRadius: '20px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white', width: '250px' }}
+                                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white' }}
                                 />
+                            </div>
+
+                            {/* Category */}
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Category</label>
                                 <select
                                     value={selectedCategory}
                                     onChange={(e) => setSelectedCategory(e.target.value)}
-                                    style={{ padding: '0.8rem', borderRadius: '20px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white' }}
+                                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white' }}
                                 >
                                     {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                                 </select>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
-                                    <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Price: ${priceRange[0]} - ${priceRange[1]}</label>
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max="500"
-                                        value={priceRange[1]}
-                                        onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
-                                        style={{ width: '150px' }}
-                                    />
-                                </div>
+                            </div>
+
+                            {/* Price Range */}
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                                    Price Range: ${priceRange[0]} - ${priceRange[1]}
+                                </label>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="500"
+                                    value={priceRange[1]}
+                                    onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
+                                    style={{ width: '100%', accentColor: 'var(--accent-color)' }}
+                                />
+                            </div>
+
+                            {/* Sort */}
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Sort By</label>
                                 <select
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value)}
-                                    style={{ padding: '0.8rem', borderRadius: '20px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white' }}
+                                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white' }}
                                 >
                                     <option value="newest">Newest First</option>
                                     <option value="price-low">Price: Low to High</option>
                                     <option value="price-high">Price: High to Low</option>
                                     <option value="popular">Most Popular</option>
                                 </select>
-                                <button onClick={handleNearMe} style={{ padding: '0.8rem 1.5rem', borderRadius: '20px', background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)' }}>
-                                    📍 Find Near Me
-                                </button>
                             </div>
+
+                            {/* Location Filter */}
+                            <button
+                                onClick={handleNearMe}
+                                style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)', fontSize: '0.95rem' }}
+                            >
+                                📍 Find Near Me
+                            </button>
+
+                            {/* Clear Filters */}
+                            <button
+                                onClick={() => {
+                                    setSearchQuery('');
+                                    setSelectedCategory('All');
+                                    setPriceRange([0, 500]);
+                                    setSortBy('newest');
+                                }}
+                                style={{ width: '100%', padding: '0.8rem', marginTop: '1rem', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.95rem' }}
+                            >
+                                Clear All Filters
+                            </button>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '2rem' }}>
-                            {filteredProducts.map(product => (
-                                <div key={product.id} style={{ position: 'relative' }}>
-                                    <ProductCard
-                                        product={product}
-                                        onBuy={handleBuy}
-                                        onAddToCart={handleAddToCart}
-                                        isFavorite={favorites.includes(product.id)}
-                                        onToggleFavorite={handleToggleFavorite}
-                                    />
-                                    {product.distance !== undefined && product.distance !== Infinity && (
-                                        <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.7)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', zIndex: 10 }}>
-                                            {product.distance.toFixed(0)} km away ({product.city})
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                            {filteredProducts.length === 0 && (
-                                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-                                    No art pieces found matching your criteria.
-                                </div>
-                            )}
+                        {/* Products Grid */}
+                        <div style={{ flex: 1 }}>
+                            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                                <h1 style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>Curated Art Collection</h1>
+                                <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem' }}>
+                                    Showing {filteredProducts.length} {filteredProducts.length === 1 ? 'piece' : 'pieces'}
+                                </p>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '2rem' }}>
+                                {filteredProducts.map(product => (
+                                    <div key={product.id} style={{ position: 'relative' }}>
+                                        <ProductCard
+                                            product={product}
+                                            onBuy={handleBuy}
+                                            onAddToCart={handleAddToCart}
+                                            isFavorite={favorites.includes(product.id)}
+                                            onToggleFavorite={handleToggleFavorite}
+                                        />
+                                        {product.distance !== undefined && product.distance !== Infinity && (
+                                            <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.7)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', zIndex: 10 }}>
+                                                {product.distance.toFixed(0)} km away ({product.city})
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                                {filteredProducts.length === 0 && (
+                                    <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+                                        No art pieces found matching your criteria.
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 ) : view === 'sell' || view === 'admin' ? (
