@@ -25,6 +25,7 @@ function App() {
         const saved = localStorage.getItem('artstore-theme');
         return saved || 'dark';
     }); // Theme with localStorage
+    const [showFilters, setShowFilters] = useState(true); // Filters visibility
 
     // Apply theme to document
     React.useEffect(() => {
@@ -328,86 +329,99 @@ function App() {
             />
             <main className="container" style={{ flex: 1 }}>
                 {view === 'gallery' ? (
-                    <div style={{ display: 'flex', gap: '2rem' }}>
-                        {/* Filters Sidebar */}
-                        <div className="glass-panel" style={{ width: '280px', padding: '1.5rem', height: 'fit-content', position: 'sticky', top: '90px' }}>
-                            <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.3rem' }}>🔍 Filters</h3>
-
-                            {/* Search */}
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Search</label>
-                                <input
-                                    type="text"
-                                    placeholder="Search art..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white' }}
-                                />
-                            </div>
-
-                            {/* Category */}
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Category</label>
-                                <select
-                                    value={selectedCategory}
-                                    onChange={(e) => setSelectedCategory(e.target.value)}
-                                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white' }}
-                                >
-                                    {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                </select>
-                            </div>
-
-                            {/* Price Range */}
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                                    Price Range: ${priceRange[0]} - ${priceRange[1]}
-                                </label>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="500"
-                                    value={priceRange[1]}
-                                    onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
-                                    style={{ width: '100%', accentColor: 'var(--accent-color)' }}
-                                />
-                            </div>
-
-                            {/* Sort */}
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Sort By</label>
-                                <select
-                                    value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value)}
-                                    style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white' }}
-                                >
-                                    <option value="newest">Newest First</option>
-                                    <option value="price-low">Price: Low to High</option>
-                                    <option value="price-high">Price: High to Low</option>
-                                    <option value="popular">Most Popular</option>
-                                </select>
-                            </div>
-
-                            {/* Location Filter */}
+                    <div>
+                        {/* Filter Toggle Button */}
+                        <div style={{ marginBottom: '1rem' }}>
                             <button
-                                onClick={handleNearMe}
-                                style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)', fontSize: '0.95rem' }}
+                                onClick={() => setShowFilters(!showFilters)}
+                                style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', background: 'var(--accent-color)', color: 'black', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                             >
-                                📍 Find Near Me
-                            </button>
-
-                            {/* Clear Filters */}
-                            <button
-                                onClick={() => {
-                                    setSearchQuery('');
-                                    setSelectedCategory('All');
-                                    setPriceRange([0, 500]);
-                                    setSortBy('newest');
-                                }}
-                                style={{ width: '100%', padding: '0.8rem', marginTop: '1rem', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.95rem' }}
-                            >
-                                Clear All Filters
+                                {showFilters ? '✕ Hide Filters' : '🔍 Show Filters'}
                             </button>
                         </div>
+
+                        <div style={{ display: 'flex', gap: '2rem' }}>
+                            {/* Filters Sidebar */}
+                            {showFilters && (
+                                <div className="glass-panel" style={{ width: '280px', padding: '1.5rem', height: 'fit-content', position: 'sticky', top: '90px' }}>
+                                    <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.3rem' }}>🔍 Filters</h3>
+
+                                    {/* Search */}
+                                    <div style={{ marginBottom: '1.5rem' }}>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Search</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Search art..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white' }}
+                                        />
+                                    </div>
+
+                                    {/* Category */}
+                                    <div style={{ marginBottom: '1.5rem' }}>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Category</label>
+                                        <select
+                                            value={selectedCategory}
+                                            onChange={(e) => setSelectedCategory(e.target.value)}
+                                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white' }}
+                                        >
+                                            {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                        </select>
+                                    </div>
+
+                                    {/* Price Range */}
+                                    <div style={{ marginBottom: '1.5rem' }}>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                                            Price Range: ${priceRange[0]} - ${priceRange[1]}
+                                        </label>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="500"
+                                            value={priceRange[1]}
+                                            onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
+                                            style={{ width: '100%', accentColor: 'var(--accent-color)' }}
+                                        />
+                                    </div>
+
+                                    {/* Sort */}
+                                    <div style={{ marginBottom: '1.5rem' }}>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Sort By</label>
+                                        <select
+                                            value={sortBy}
+                                            onChange={(e) => setSortBy(e.target.value)}
+                                            style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white' }}
+                                        >
+                                            <option value="newest">Newest First</option>
+                                            <option value="price-low">Price: Low to High</option>
+                                            <option value="price-high">Price: High to Low</option>
+                                            <option value="popular">Most Popular</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Location Filter */}
+                                    <button
+                                        onClick={handleNearMe}
+                                        style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)', fontSize: '0.95rem' }}
+                                    >
+                                        📍 Find Near Me
+                                    </button>
+
+                                    {/* Clear Filters */}
+                                    <button
+                                        onClick={() => {
+                                            setSearchQuery('');
+                                            setSelectedCategory('All');
+                                            setPriceRange([0, 500]);
+                                            setSortBy('newest');
+                                        }}
+                                        style={{ width: '100%', padding: '0.8rem', marginTop: '1rem', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.95rem' }}
+                                    >
+                                        Clear All Filters
+                                    </button>
+                                </div>
+                            )}        </div>
 
                         {/* Products Grid */}
                         <div style={{ flex: 1 }}>
