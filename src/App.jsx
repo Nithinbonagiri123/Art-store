@@ -1,0 +1,469 @@
+import React, { useState } from 'react';
+import { Navbar } from './components/Navbar';
+import { ProductCard } from './components/ProductCard';
+import { Login } from './components/Login';
+import { Checkout } from './components/Checkout';
+import { initialProducts } from './data';
+
+import { Footer } from './components/Footer';
+
+
+function App() {
+    const [view, setView] = useState('gallery');
+    const [products, setProducts] = useState(initialProducts);
+    const [user, setUser] = useState(null); // Auth state
+    const [checkoutProduct, setCheckoutProduct] = useState(null); // Checkout state
+
+    // Admin State
+    const [formData, setFormData] = useState({
+        title: '',
+        price: '',
+        category: '',
+        description: '',
+        image: '',
+        city: '',
+        lat: '',
+        lng: ''
+    });
+    const [isEditing, setIsEditing] = useState(null);
+
+    // User Management State
+    const [users, setUsers] = useState([
+        { id: 1, username: 'admin', password: 'admin123', role: 'admin' },
+        { id: 2, username: 'user', password: 'user123', role: 'user' }
+    ]);
+    const [newUser, setNewUser] = useState('');
+    const [newUserRole, setNewUserRole] = useState('user');
+    const [editingUser, setEditingUser] = useState(null);
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleGetLocation = (e) => {
+        e.preventDefault();
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                setFormData(prev => ({
+                    ...prev,
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                }));
+                alert("Location fetched! Don't forget to add the City name.");
+            }, () => {
+                alert("Unable to retrieve your location.");
+            });
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        const productData = {
+            ...formData,
+            price: Number(formData.price),
+            lat: formData.lat ? Number(formData.lat) : undefined,
+            lng: formData.lng ? Number(formData.lng) : undefined,
+        };
+
+        if (isEditing) {
+            setProducts(products.map(p => p.id === isEditing ? { ...productData, id: isEditing } : p));
+            setIsEditing(null);
+        } else {
+            const newProduct = {
+                ...productData,
+                id: Date.now(),
+                seller: formData.seller || user.username // Use selected seller or current user
+            };
+            setProducts([...products, newProduct]);
+        }
+        setFormData({ title: '', price: '', category: '', description: '', image: '', city: '', lat: '', lng: '', seller: '' });
+        alert(isEditing ? 'Product Updated!' : 'Product Added!');
+    };
+
+    const handleEdit = (product) => {
+        setFormData({
+            ...product,
+            seller: product.seller || '',
+            city: product.city || '',
+            lat: product.lat || '',
+            lng: product.lng || ''
+        });
+        setIsEditing(product.id);
+        setView('admin'); // Re-use admin view for selling
+    };
+
+    const handleDelete = (id) => {
+        if (window.confirm('Are you sure you want to delete this art piece?')) {
+            setProducts(products.filter(p => p.id !== id));
+        }
+    };
+
+    const handleLogin = (credentials) => {
+        const foundUser = users.find(u => u.username === credentials.username && u.password === credentials.password);
+        if (foundUser) {
+            setUser(foundUser);
+            setView('gallery');
+        } else {
+            alert('Invalid username or password');
+        }
+    };
+
+    const handleRegister = (credentials) => {
+        if (users.find(u => u.username === credentials.username)) {
+            alert('Username already exists');
+            return;
+        }
+        const newUser = { ...credentials, id: Date.now(), role: 'user' };
+        setUsers([...users, newUser]);
+        setUser(newUser);
+        setView('gallery');
+        alert('Registration successful! Welcome to Art Store.');
+    };
+
+    const handleAddUser = (e) => {
+        e.preventDefault();
+        if (newUser.trim()) {
+            if (editingUser) {
+                setUsers(users.map(u => u.id === editingUser ? { ...u, username: newUser, role: newUserRole } : u));
+                setEditingUser(null);
+                alert('User updated!');
+            } else {
+                setUsers([...users, { id: Date.now(), username: newUser, password: 'password123', role: newUserRole }]);
+                alert(`User added as ${newUserRole}! Default password is "password123"`);
+            }
+            setNewUser('');
+            setNewUserRole('user');
+        }
+    };
+
+    const handleEditUser = (user) => {
+        setNewUser(user.username);
+        setNewUserRole(user.role);
+        setEditingUser(user.id);
+    };
+
+    const handleDeleteUser = (id) => {
+        if (window.confirm('Are you sure you want to delete this user?')) {
+            setUsers(users.filter(u => u.id !== id));
+        }
+    };
+
+    const handleBuy = (product) => {
+        setCheckoutProduct(product);
+    };
+
+    const handleConfirmPurchase = (details) => {
+        console.log('Purchase Details:', details);
+        alert(`Thank you for your purchase!\n\nItem: ${details.product.title}\nShipped to: ${details.address}\nPayment: ${details.paymentMode}`);
+        setCheckoutProduct(null);
+    };
+
+    // Haversine formula to calculate distance
+    const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
+        var R = 6371; // Radius of the earth in km
+        var dLat = deg2rad(lat2 - lat1);  // deg2rad below
+        var dLon = deg2rad(lon2 - lon1);
+        var a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2)
+            ;
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        var d = R * c; // Distance in km
+        return d;
+    }
+
+    const deg2rad = (deg) => {
+        return deg * (Math.PI / 180)
+    }
+
+    const handleNearMe = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+
+                const sortedProducts = [...products].map(product => {
+                    if (product.lat && product.lng) {
+                        return {
+                            ...product,
+                            distance: getDistanceFromLatLonInKm(userLat, userLng, product.lat, product.lng)
+                        };
+                    }
+                    return { ...product, distance: Infinity };
+                }).sort((a, b) => a.distance - b.distance);
+
+                setProducts(sortedProducts);
+                alert("Showing art pieces closest to you!");
+            }, () => {
+                alert("Unable to retrieve your location.");
+            });
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    };
+
+    const handleSelfDelete = () => {
+        if (user.role === 'admin') {
+            alert('Admins cannot delete their own account.');
+            return;
+        }
+        if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+            setUsers(users.filter(u => u.id !== user.id));
+            setUser(null);
+            setView('gallery');
+            alert('We were really sry to miss a customer');
+        }
+    };
+
+    if (!user) {
+        return <Login onLogin={handleLogin} onRegister={handleRegister} />;
+    }
+
+    return (
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <Navbar
+                currentView={view}
+                setView={setView}
+                user={user}
+                onLogout={() => { setUser(null); setView('gallery'); }}
+                onDeleteAccount={handleSelfDelete}
+            />
+            <main className="container" style={{ flex: 1 }}>
+                {view === 'gallery' ? (
+                    <div>
+                        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                            <h1 style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>Curated Art Collection</h1>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem' }}>Discover unique pieces for your space.</p>
+                            <button onClick={handleNearMe} style={{ marginTop: '1rem', background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)' }}>
+                                📍 Find Art Near Me
+                            </button>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '2rem' }}>
+                            {products.map(product => (
+                                <div key={product.id} style={{ position: 'relative' }}>
+                                    <ProductCard product={product} onBuy={handleBuy} />
+                                    {product.distance !== undefined && product.distance !== Infinity && (
+                                        <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.7)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', zIndex: 10 }}>
+                                            {product.distance.toFixed(0)} km away ({product.city})
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ) : view === 'sell' || view === 'admin' ? (
+                    <div className="glass-panel" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                            <h1 style={{ margin: 0 }}>{view === 'admin' ? 'Admin Dashboard' : 'Sell Your Art'}</h1>
+                        </div>
+
+                        {view === 'admin' && (
+                            <div style={{ marginBottom: '3rem', padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
+                                <h2 style={{ marginTop: 0 }}>User Management</h2>
+                                <form onSubmit={handleAddUser} style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                                    <input
+                                        type="text"
+                                        value={newUser}
+                                        onChange={(e) => setNewUser(e.target.value)}
+                                        placeholder="New username..."
+                                        style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                                    />
+                                    <select
+                                        value={newUserRole}
+                                        onChange={(e) => setNewUserRole(e.target.value)}
+                                        style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                                    >
+                                        <option value="user">User</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                    <button type="submit">{editingUser ? 'Update User' : 'Add User'}</button>
+                                    {editingUser && (
+                                        <button type="button" onClick={() => { setEditingUser(null); setNewUser(''); setNewUserRole('user'); }} style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'white' }}>
+                                            Cancel
+                                        </button>
+                                    )}
+                                </form>
+                                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                                    {users.map(u => (
+                                        <div key={u.id} style={{ padding: '0.8rem', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div>
+                                                <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>{u.username}</span>
+                                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>({u.role})</span>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <button onClick={() => handleEditUser(u)} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: 'var(--bg-secondary)', color: 'white' }}>Edit</button>
+                                                <button onClick={() => handleDeleteUser(u.id)} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#ff4444', color: 'white' }}>Delete</button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <h2 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+                            {isEditing ? 'Edit Product' : 'Add New Art Piece'}
+                        </h2>
+                        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1.5rem', marginBottom: '3rem' }}>
+                            {view === 'admin' && (
+                                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                                    <label>Assign to User (Seller)</label>
+                                    <select
+                                        name="seller"
+                                        value={formData.seller || ''}
+                                        onChange={handleInputChange}
+                                        style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                                    >
+                                        <option value="">-- Assign to Self ({user.username}) --</option>
+                                        {users.map(u => (
+                                            <option key={u.id} value={u.username}>{u.username} ({u.role})</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                            <div style={{ display: 'grid', gap: '0.5rem' }}>
+                                <label>Title</label>
+                                <input
+                                    name="title"
+                                    value={formData.title}
+                                    onChange={handleInputChange}
+                                    required
+                                    style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                                />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                                    <label>Price ($)</label>
+                                    <input
+                                        name="price"
+                                        type="number"
+                                        value={formData.price}
+                                        onChange={handleInputChange}
+                                        required
+                                        style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                                    />
+                                </div>
+                                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                                    <label>Category</label>
+                                    <input
+                                        name="category"
+                                        value={formData.category}
+                                        onChange={handleInputChange}
+                                        required
+                                        style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gap: '0.5rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <label style={{ fontWeight: 'bold' }}>Location</label>
+                                    <button
+                                        type="button"
+                                        onClick={handleGetLocation}
+                                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)' }}
+                                    >
+                                        📍 Use My Location
+                                    </button>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem' }}>
+                                    <input
+                                        name="city"
+                                        value={formData.city || ''}
+                                        onChange={handleInputChange}
+                                        placeholder="City Name"
+                                        required
+                                        style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                                    />
+                                    <input
+                                        name="lat"
+                                        type="number"
+                                        value={formData.lat || ''}
+                                        onChange={handleInputChange}
+                                        placeholder="Lat"
+                                        step="any"
+                                        style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                                    />
+                                    <input
+                                        name="lng"
+                                        type="number"
+                                        value={formData.lng || ''}
+                                        onChange={handleInputChange}
+                                        placeholder="Lng"
+                                        step="any"
+                                        style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gap: '0.5rem' }}>
+                                <label>Image URL</label>
+                                <input
+                                    name="image"
+                                    value={formData.image}
+                                    onChange={handleInputChange}
+                                    required
+                                    placeholder="https://..."
+                                    style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                                />
+                            </div>
+                            <div style={{ display: 'grid', gap: '0.5rem' }}>
+                                <label>Description</label>
+                                <textarea
+                                    name="description"
+                                    value={formData.description}
+                                    onChange={handleInputChange}
+                                    required
+                                    rows="4"
+                                    style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white', fontFamily: 'inherit' }}
+                                />
+                            </div>
+                            <button type="submit" style={{ padding: '1rem' }}>
+                                {isEditing ? 'Update Product' : 'List Item for Sale'}
+                            </button>
+                        </form>
+
+                        {(view === 'admin' || (view === 'sell' && products.some(p => p.seller === user.username))) && (
+                            <>
+                                <h2 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+                                    {view === 'admin' ? 'Global Inventory' : 'Your Listings'}
+                                </h2>
+                                <div style={{ display: 'grid', gap: '1rem' }}>
+                                    {products.filter(p => view === 'admin' || p.seller === user.username).map(product => (
+                                        <div key={product.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                <img src={product.image} alt={product.title} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />
+                                                <div>
+                                                    <h4 style={{ margin: 0 }}>{product.title}</h4>
+                                                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>${product.price}</span>
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <button onClick={() => handleEdit(product)} style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', background: 'var(--bg-secondary)', color: 'white' }}>Edit</button>
+                                                <button onClick={() => handleDelete(product.id)} style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', background: '#ff4444', color: 'white' }}>Delete</button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </div>
+                ) : null}
+
+            </main>
+            {view !== 'admin' && <Footer />}
+            {checkoutProduct && (
+                <Checkout
+                    product={checkoutProduct}
+                    onCancel={() => setCheckoutProduct(null)}
+                    onConfirm={handleConfirmPurchase}
+                />
+            )}
+        </div>
+    );
+}
+
+export default App;
