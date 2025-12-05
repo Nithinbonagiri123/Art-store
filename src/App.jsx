@@ -26,6 +26,10 @@ function App() {
         return saved || 'dark';
     }); // Theme with localStorage
     const [showFilters, setShowFilters] = useState(true); // Filters visibility
+    const [reviews, setReviews] = useState(() => {
+        const saved = localStorage.getItem('artstore-reviews');
+        return saved ? JSON.parse(saved) : [];
+    }); // Reviews with localStorage
 
     // Apply theme to document
     React.useEffect(() => {
@@ -222,6 +226,29 @@ function App() {
             : [...favorites, productId];
         setFavorites(newFavorites);
         localStorage.setItem('artstore-favorites', JSON.stringify(newFavorites));
+    };
+
+    const handleAddReview = (productId, rating, comment) => {
+        const newReview = {
+            id: Date.now(),
+            productId,
+            rating,
+            comment,
+            username: user.username,
+            date: new Date().toLocaleDateString()
+        };
+        const newReviews = [...reviews, newReview];
+        setReviews(newReviews);
+        localStorage.setItem('artstore-reviews', JSON.stringify(newReviews));
+        alert('Review added successfully!');
+    };
+
+    // Calculate average rating for a product
+    const getAverageRating = (productId) => {
+        const productReviews = reviews.filter(r => r.productId === productId);
+        if (productReviews.length === 0) return 0;
+        const sum = productReviews.reduce((acc, r) => acc + r.rating, 0);
+        return (sum / productReviews.length).toFixed(1);
     };
 
     // Haversine formula to calculate distance
@@ -441,6 +468,8 @@ function App() {
                                             onAddToCart={handleAddToCart}
                                             isFavorite={favorites.includes(product.id)}
                                             onToggleFavorite={handleToggleFavorite}
+                                            averageRating={getAverageRating(product.id)}
+                                            reviewCount={reviews.filter(r => r.productId === product.id).length}
                                         />
                                         {product.distance !== undefined && product.distance !== Infinity && (
                                             <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.7)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', zIndex: 10 }}>
@@ -721,6 +750,8 @@ function App() {
                                         onAddToCart={handleAddToCart}
                                         isFavorite={true}
                                         onToggleFavorite={handleToggleFavorite}
+                                        averageRating={getAverageRating(product.id)}
+                                        reviewCount={reviews.filter(r => r.productId === product.id).length}
                                     />
                                 ))}
                             </div>
