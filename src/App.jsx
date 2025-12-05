@@ -17,6 +17,20 @@ function App() {
     const [cart, setCart] = useState([]); // Shopping cart
     const [showCart, setShowCart] = useState(false); // Cart visibility
     const [orders, setOrders] = useState([]); // Order history
+    const [favorites, setFavorites] = useState(() => {
+        const saved = localStorage.getItem('artstore-favorites');
+        return saved ? JSON.parse(saved) : [];
+    }); // Favorites with localStorage
+    const [theme, setTheme] = useState(() => {
+        const saved = localStorage.getItem('artstore-theme');
+        return saved || 'dark';
+    }); // Theme with localStorage
+
+    // Apply theme to document
+    React.useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('artstore-theme', theme);
+    }, [theme]);
 
     // Admin State
     const [formData, setFormData] = useState({
@@ -201,6 +215,14 @@ function App() {
         setShowCart(false);
     };
 
+    const handleToggleFavorite = (productId) => {
+        const newFavorites = favorites.includes(productId)
+            ? favorites.filter(id => id !== productId)
+            : [...favorites, productId];
+        setFavorites(newFavorites);
+        localStorage.setItem('artstore-favorites', JSON.stringify(newFavorites));
+    };
+
     // Haversine formula to calculate distance
     const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
         var R = 6371; // Radius of the earth in km
@@ -262,15 +284,29 @@ function App() {
     // Search & Filter State (must be declared before any early returns)
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [priceRange, setPriceRange] = useState([0, 500]);
+    const [sortBy, setSortBy] = useState('newest');
 
     // Derived state for categories
     const categories = ['All', ...new Set(products.map(p => p.category))];
 
-    // Filtered products
-    const filteredProducts = products.filter(product => {
+    // Filtered and sorted products
+    let filteredProducts = products.filter(product => {
         const matchesSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
-        return matchesSearch && matchesCategory;
+        const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
+        return matchesSearch && matchesCategory && matchesPrice;
+    });
+
+    // Sort products
+    filteredProducts = [...filteredProducts].sort((a, b) => {
+        switch (sortBy) {
+            case 'price-low': return a.price - b.price;
+            case 'price-high': return b.price - a.price;
+            case 'newest': return b.id - a.id;
+            case 'popular': return (b.views || 0) - (a.views || 0);
+            default: return 0;
+        }
     });
 
     if (!user) {
@@ -287,6 +323,8 @@ function App() {
                 onDeleteAccount={handleSelfDelete}
                 cartCount={cart.length}
                 onCartClick={() => setShowCart(true)}
+                theme={theme}
+                onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             />
             <main className="container" style={{ flex: 1 }}>
                 {view === 'gallery' ? (
@@ -295,13 +333,13 @@ function App() {
                             <h1 style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>Curated Art Collection</h1>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem' }}>Discover unique pieces for your space.</p>
 
-                            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem', flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
                                 <input
                                     type="text"
                                     placeholder="Search art..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    style={{ padding: '0.8rem', borderRadius: '20px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white', width: '300px' }}
+                                    style={{ padding: '0.8rem', borderRadius: '20px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white', width: '250px' }}
                                 />
                                 <select
                                     value={selectedCategory}
@@ -309,6 +347,27 @@ function App() {
                                     style={{ padding: '0.8rem', borderRadius: '20px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white' }}
                                 >
                                     {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                </select>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
+                                    <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Price: ${priceRange[0]} - ${priceRange[1]}</label>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="500"
+                                        value={priceRange[1]}
+                                        onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
+                                        style={{ width: '150px' }}
+                                    />
+                                </div>
+                                <select
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value)}
+                                    style={{ padding: '0.8rem', borderRadius: '20px', border: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)', color: 'white' }}
+                                >
+                                    <option value="newest">Newest First</option>
+                                    <option value="price-low">Price: Low to High</option>
+                                    <option value="price-high">Price: High to Low</option>
+                                    <option value="popular">Most Popular</option>
                                 </select>
                                 <button onClick={handleNearMe} style={{ padding: '0.8rem 1.5rem', borderRadius: '20px', background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)' }}>
                                     📍 Find Near Me
@@ -319,7 +378,13 @@ function App() {
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '2rem' }}>
                             {filteredProducts.map(product => (
                                 <div key={product.id} style={{ position: 'relative' }}>
-                                    <ProductCard product={product} onBuy={handleBuy} onAddToCart={handleAddToCart} />
+                                    <ProductCard
+                                        product={product}
+                                        onBuy={handleBuy}
+                                        onAddToCart={handleAddToCart}
+                                        isFavorite={favorites.includes(product.id)}
+                                        onToggleFavorite={handleToggleFavorite}
+                                    />
                                     {product.distance !== undefined && product.distance !== Infinity && (
                                         <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.7)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', zIndex: 10 }}>
                                             {product.distance.toFixed(0)} km away ({product.city})
@@ -574,6 +639,31 @@ function App() {
                                             </div>
                                         )}
                                     </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ) : view === 'favorites' ? (
+                    <div>
+                        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                            <h1 style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>❤️ My Favorites</h1>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem' }}>Art pieces you've saved for later</p>
+                        </div>
+                        {favorites.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+                                You haven't added any favorites yet. Click the heart icon on any art piece to save it!
+                            </div>
+                        ) : (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '2rem' }}>
+                                {products.filter(p => favorites.includes(p.id)).map(product => (
+                                    <ProductCard
+                                        key={product.id}
+                                        product={product}
+                                        onBuy={handleBuy}
+                                        onAddToCart={handleAddToCart}
+                                        isFavorite={true}
+                                        onToggleFavorite={handleToggleFavorite}
+                                    />
                                 ))}
                             </div>
                         )}

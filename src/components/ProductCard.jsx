@@ -1,11 +1,38 @@
 import React from 'react';
 
-export function ProductCard({ product, onBuy, onAddToCart }) {
+export function ProductCard({ product, onBuy, onAddToCart, isFavorite, onToggleFavorite }) {
     return (
-        <div className="glass-panel" style={{ overflow: 'hidden', transition: 'transform 0.3s ease', cursor: 'pointer' }}
+        <div className="glass-panel" style={{ overflow: 'hidden', transition: 'transform 0.3s ease', cursor: 'pointer', position: 'relative' }}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-8px)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
         >
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleFavorite(product.id);
+                }}
+                style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    background: 'rgba(0,0,0,0.6)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '40px',
+                    height: '40px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                    fontSize: '1.5rem',
+                    transition: 'transform 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+                {isFavorite ? '❤️' : '🤍'}
+            </button>
             <img src={product.image} alt={product.title} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
             <div style={{ padding: '1.5rem' }}>
                 <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.3rem' }}>{product.title}</h3>

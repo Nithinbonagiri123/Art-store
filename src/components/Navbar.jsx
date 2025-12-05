@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function Navbar({ currentView, setView, user, onLogout, onDeleteAccount, cartCount, onCartClick }) {
+export function Navbar({ currentView, setView, user, onLogout, onDeleteAccount, cartCount, onCartClick, theme, onToggleTheme }) {
     return (
         <div style={{ position: 'sticky', top: 0, zIndex: 1000, background: 'rgba(10,10,10,0.8)', backdropFilter: 'blur(10px)', borderBottom: '1px solid var(--border-color)' }}>
             <nav className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '70px' }}>
@@ -31,6 +31,12 @@ export function Navbar({ currentView, setView, user, onLogout, onDeleteAccount, 
                             >
                                 My Orders
                             </button>
+                            <button
+                                onClick={() => setView('favorites')}
+                                style={{ background: currentView === 'favorites' ? 'var(--accent-color)' : 'transparent', color: currentView === 'favorites' ? 'black' : 'white' }}
+                            >
+                                ❤️ Favorites
+                            </button>
                         </>
                     )}
 
@@ -45,6 +51,13 @@ export function Navbar({ currentView, setView, user, onLogout, onDeleteAccount, 
 
                     {user && (
                         <>
+                            <button
+                                onClick={onToggleTheme}
+                                style={{ fontSize: '1.2rem', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)' }}
+                                title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                            >
+                                {theme === 'dark' ? '☀️' : '🌙'}
+                            </button>
                             <button
                                 onClick={onCartClick}
                                 style={{ position: 'relative', fontSize: '1.2rem', padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)' }}
