@@ -50,7 +50,7 @@ export function ProductCard({ product, onBuy, onAddToCart, isFavorite, onToggleF
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
                     <button
                         onClick={() => onAddToCart(product)}
-                        style={{ flex: 1, padding: '0.8rem', background: 'rgba(255,255,255,0.1)', border: '1px solid var(--accent-color)', color: 'var(--accent-color)' }}
+                        style={{ flex: 1, padding: '0.8rem', background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)' }}
                     >
                         Add to Cart
                     </button>

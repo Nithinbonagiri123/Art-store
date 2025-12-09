@@ -23,7 +23,7 @@ export function Cart({ cart, onRemove, onCheckout, onClose }) {
                     <>
                         <div style={{ display: 'grid', gap: '1rem', marginBottom: '2rem' }}>
                             {cart.map(item => (
-                                <div key={item.id} style={{ display: 'flex', gap: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                                <div key={item.id} style={{ display: 'flex', gap: '1rem', padding: '1rem', background: 'var(--bg-card)', borderRadius: '8px' }}>
                                     <img src={item.image} alt={item.title} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px' }} />
                                     <div style={{ flex: 1 }}>
                                         <h4 style={{ margin: '0 0 0.5rem 0' }}>{item.title}</h4>

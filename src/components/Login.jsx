@@ -18,7 +18,7 @@ export function Login({ onLogin, onRegister }) {
     return (
         <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'linear-gradient(135deg, #1a1a1a, #2c3e50)',
+            background: 'var(--bg-primary)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             zIndex: 2000
         }}>
@@ -37,7 +37,7 @@ export function Login({ onLogin, onRegister }) {
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         required
-                        style={{ padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                        style={{ padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}
                     />
                     {isRegistering && (
                         <input
@@ -46,7 +46,7 @@ export function Login({ onLogin, onRegister }) {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            style={{ padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                            style={{ padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}
                         />
                     )}
                     <input
@@ -55,7 +55,7 @@ export function Login({ onLogin, onRegister }) {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        style={{ padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                        style={{ padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}
                     />
 
                     <button type="submit" style={{ padding: '1rem', background: 'var(--accent-color)', color: 'black', fontWeight: 'bold' }}>

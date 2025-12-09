@@ -25,7 +25,7 @@ export function Checkout({ product, onCancel, onConfirm }) {
 
                 <h2 style={{ marginTop: 0, marginBottom: '1.5rem', textAlign: 'center' }}>Checkout</h2>
 
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', padding: '1rem', background: 'var(--bg-card)', borderRadius: '8px' }}>
                     <img src={product.image} alt={product.title} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px' }} />
                     <div>
                         <h3 style={{ margin: '0 0 0.5rem 0' }}>{product.title}</h3>
@@ -42,7 +42,7 @@ export function Checkout({ product, onCancel, onConfirm }) {
                             required
                             rows="3"
                             placeholder="123 Art Street, Creative City..."
-                            style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white', fontFamily: 'inherit' }}
+                            style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--input-bg)', color: 'var(--text-primary)', fontFamily: 'inherit' }}
                         />
                     </div>
 
@@ -51,7 +51,7 @@ export function Checkout({ product, onCancel, onConfirm }) {
                         <select
                             value={paymentMode}
                             onChange={(e) => setPaymentMode(e.target.value)}
-                            style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white' }}
+                            style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}
                         >
                             <option value="credit_card">Credit Card</option>
                             <option value="paypal">PayPal</option>
